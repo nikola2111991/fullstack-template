@@ -1,0 +1,55 @@
+name: CI
+on:
+  push: { branches: [main, dev] }
+  pull_request: { branches: [main] }
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: node-
+
+      - run: npm ci
+      - run: npx eslint src/ --ext .ts,.tsx
+      - run: npx tsc --noEmit
+      - run: npm test -- --coverage --passWithNoTests
+      - run: npm audit --audit-level=high
+      - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-
+
+      - run: pip install -r requirements.txt
+      - run: pip install ruff mypy pytest pytest-cov pip-audit
+      - run: ruff check .
+      - run: mypy app/ --ignore-missing-imports
+      - run: pytest -v --tb=short --cov=app --cov-report=term --cov-fail-under=80
+      - run: pip-audit
