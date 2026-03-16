@@ -1,0 +1,41 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+.venv
+venv
+
+# Build artifacts
+.next
+out
+dist
+build
+__pycache__
+*.py[cod]
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# Tests and coverage
+tests/
+coverage/
+htmlcov/
+.coverage
+.pytest_cache/
+.mypy_cache/
+
+# Docs and misc
+*.md
+LICENSE
+docs/
+tmp/
+data/
+output/
